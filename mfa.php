@@ -5,7 +5,7 @@ session_start();
 
 $type = $_GET['type'] ?? 'Mobile-OTP';
 $type = $type === 'Authenticator' ? 'Authenticator' : 'Mobile-OTP';
-$authenticatorImage = '../staroilvoucher_shop/images/authenticator.jpg';
+$authenticatorImage = '../images/authenticatornew.png';
 ?>
 <!doctype html>
 <html lang="en">
