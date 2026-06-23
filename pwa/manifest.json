@@ -1,0 +1,20 @@
+{
+  "name": "StarOil Fuel Voucher System",
+  "short_name": "StarOil Vouchers",
+  "description": "Purchase, manage, activate, and redeem StarOil fuel vouchers.",
+  "start_url": "../store",
+  "scope": "../",
+  "display": "standalone",
+  "background_color": "#F5F8FB",
+  "theme_color": "#2178BD",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "business", "finance"]
+}

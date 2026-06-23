@@ -1,0 +1,88 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets/
+
+# Runtime logs and generated text artifacts
+*.log
+*.txt
+!README.txt
+logs/
+log/
+callback_log.*
+hubtel_webhook.*
+wallet_hubtel_webhook.*
+webhook.*
+visits.*
+scan_log.*
+blocked_ips.txt
+tingg_success_ack.log
+
+# Runtime storage, uploads, cache, and sessions
+/storage/
+/cache/
+/tmp/
+/temp/
+/sessions/
+/uploads/
+/private/
+/backups/
+
+# Dependency folders
+/vendor/
+/node_modules/
+
+# Composer local/vendor metadata
+composer.phar
+/.phpunit.cache/
+
+# Build and coverage output
+/dist/
+/build/
+/coverage/
+/public/build/
+*.map
+
+# Database dumps and local data
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+
+# Backups and editor swap files
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+*.swp
+*.swo
+*.tmp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/editor settings
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Codex/local agent workspace
+.agents/
+.codex/
+
+# Keep intentionally committed placeholders
+!.gitkeep
