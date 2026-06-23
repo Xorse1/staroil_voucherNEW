@@ -15,6 +15,7 @@ secrets/
 *.log
 *.txt
 !README.txt
+!README.md
 logs/
 log/
 callback_log.*
