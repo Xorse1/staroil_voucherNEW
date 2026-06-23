@@ -1,5 +1,6 @@
 # Environment and secrets
 .env
+.htaccess
 .env.*
 !.env.example
 *.pem
