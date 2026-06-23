@@ -39,6 +39,7 @@ config.php
 /backups/
 /config/conn.php
 /config/config.php
+/config/index.php
 
 # Dependency folders
 /vendor/
