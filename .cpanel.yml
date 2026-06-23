@@ -1,5 +1,8 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/username/public_html/
-    - /bin/rsync -av --exclude='.git' --exclude='.env' ./ $DEPLOYPATH
+    - export DEPLOYPATH=/home/starifro/app.staroil.services/
+    - /usr/bin/rsync -av --delete \
+      --exclude='.git' \
+      --exclude='.cpanel.yml' \
+      ./ $DEPLOYPATH
