@@ -49,7 +49,7 @@ if ($next !== '') {
       <section class="rounded-ui border border-brand-line bg-white p-6 shadow-soft" aria-labelledby="login-title">
         <div class="mb-6 flex items-center gap-3">
           <img class="h-10 w-auto" src="images/alogo_light.png" alt="StarOil logo" />
-          <div><p class="text-xs font-medium text-brand-muted">Fuel Voucher System</p></div>
+          <div><p class="text-xs font-medium text-brand-muted">User Login</p></div>
         </div>
         <div class="mb-5 grid grid-cols-2 rounded-ui border border-brand-line bg-brand-soft p-1">
           <span class="rounded-ui bg-brand-blue px-3 py-2 text-center text-sm font-semibold text-white">Login</span>
