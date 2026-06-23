@@ -26,6 +26,7 @@ visits.*
 scan_log.*
 blocked_ips.txt
 tingg_success_ack.log
+config.php
 
 # Runtime storage, uploads, cache, and sessions
 /storage/
@@ -36,6 +37,8 @@ tingg_success_ack.log
 /uploads/
 /private/
 /backups/
+/config/conn.php
+/config/config.php
 
 # Dependency folders
 /vendor/
