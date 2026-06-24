@@ -2,8 +2,8 @@
 include "config/config.php";
 
 function send_sms_arkesel($to, $message){
-  require_once "config.php";  
- $api_key = $sms_arkesel_api_key;    
+  //require_once "config.php";  
+ $api_key = ARKESEL_API_KEY;    
 // SEND SMS
 $curl = curl_init();
 
@@ -50,7 +50,7 @@ curl_close($curl);
 }
 
 function send_sms_backup ($phone, $message){
-    require_once "config.php"; 
+    //require_once "config.php"; 
 $api_key = MNOTIFY_API_KEY;
 $endPoint = 'https://api.mnotify.com/api/sms/quick';
 $apiKey = $api_key;
