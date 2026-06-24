@@ -30,10 +30,59 @@
   </nav>
 </header>
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"><div><p class="text-sm font-semibold text-brand-blue">Voucher Management</p><h1 class="mt-1 text-2xl font-bold sm:text-3xl">My Vouchers</h1><p class="mt-2 text-sm leading-6 text-brand-muted">Search, filter, view, edit, print, or export purchased vouchers.</p></div><div class="flex flex-col gap-2 sm:flex-row"><label class="sr-only" for="voucher-search">Search vouchers</label><input id="voucher-search" class="rounded-ui border border-brand-line bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" type="search" placeholder="Search code, auth, station, phone" /><label class="sr-only" for="status-filter">Filter by status</label><select id="status-filter" class="rounded-ui border border-brand-line bg-white px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue"><option value="all">All statuses</option><option>Pending</option><option>Activated</option><option>Redeemed</option><option>Not Redeemed</option><option>Expired</option></select><button id="export-vouchers" class="rounded-ui border border-brand-blue bg-white px-3 py-2 text-sm font-semibold text-brand-blue hover:bg-[#EEF7FF]" type="button">Export CSV</button><div class="grid grid-cols-2 rounded-ui border border-brand-line bg-white p-1" aria-label="Voucher view"><button data-voucher-view="grid" class="rounded-ui bg-brand-blue px-3 py-2 text-sm font-semibold text-white" type="button">Grid</button><button data-voucher-view="table" class="rounded-ui px-3 py-2 text-sm font-semibold text-brand-muted" type="button">Table</button></div></div></div>
-      <?php if (!empty($_SESSION['successupdated'])): ?><div class="mb-5 rounded-ui border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800" role="status"><?= htmlspecialchars($_SESSION['successupdated']) ?></div><?php unset($_SESSION['successupdated']); endif; ?>
-      <?php if (!empty($_SESSION['successerrorupdated'])): ?><div class="mb-5 rounded-ui border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800" role="alert"><?= htmlspecialchars($_SESSION['successerrorupdated']) ?></div><?php unset($_SESSION['successerrorupdated']); endif; ?>
-      <section id="voucher-table-view" class="hidden rounded-ui border border-brand-line bg-white shadow-soft"><div class="overflow-x-auto"><table class="min-w-full divide-y divide-brand-line"><thead class="bg-brand-soft"><tr><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Actions</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Order Code</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Voucher Code</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Auth</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Amount</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Start</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Expiry</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Station</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Redeemed</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Redeemed Phone</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Status</th></tr></thead><tbody id="voucher-table" class="divide-y divide-brand-line"></tbody></table></div></section>
+      <div class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="text-sm font-semibold text-brand-blue">Voucher Management</p>
+          <h1 class="mt-1 text-2xl font-bold sm:text-3xl">My Vouchers</h1>
+          <p class="mt-2 text-sm leading-6 text-brand-muted">Search, filter, view, edit, print, or export purchased vouchers.</p>
+        </div>
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <label class="sr-only" for="voucher-search">Search vouchers</label>
+          <input id="voucher-search" class="rounded-ui border border-brand-line bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" type="search" placeholder="Search code, auth, station, phone" />
+          <label class="sr-only" for="status-filter">Filter by status</label>
+          <select id="status-filter" class="rounded-ui border border-brand-line bg-white px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue">
+            <option value="all">All statuses</option>
+            <option>Pending</option>
+            <option>Activated</option>
+            <option>Redeemed</option>
+            <option>Not Redeemed</option>
+            <option>Expired</option>
+          </select>
+          <button id="export-vouchers" class="rounded-ui border border-brand-blue bg-white px-3 py-2 text-sm font-semibold text-brand-blue hover:bg-[#EEF7FF]" type="button">Export CSV</button>
+          <div class="grid grid-cols-2 rounded-ui border border-brand-line bg-white p-1" aria-label="Voucher view">
+            <button data-voucher-view="grid" class="rounded-ui bg-brand-blue px-3 py-2 text-sm font-semibold text-white" type="button">Grid</button>
+            <button data-voucher-view="table" class="rounded-ui px-3 py-2 text-sm font-semibold text-brand-muted" type="button">Table</button>
+          </div>
+        </div>
+      </div>
+      <?php if (!empty($_SESSION['successupdated'])): ?>
+        <div class="mb-5 rounded-ui border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800" role="status"><?= htmlspecialchars($_SESSION['successupdated']) ?></div>
+        <?php unset($_SESSION['successupdated']); endif; ?>
+      <?php if (!empty($_SESSION['successerrorupdated'])): ?>
+        <div class="mb-5 rounded-ui border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800" role="alert"><?= htmlspecialchars($_SESSION['successerrorupdated']) ?></div>
+        <?php unset($_SESSION['successerrorupdated']); endif; ?>
+      <section id="voucher-table-view" class="hidden rounded-ui border border-brand-line bg-white shadow-soft">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-brand-line">
+            <thead class="bg-brand-soft">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Actions</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Order Code</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Voucher Code</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Auth</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Amount</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Order Date</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Expiry</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Station</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Redeemed</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Redeemed Phone</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-brand-muted">Status</th>
+              </tr>
+            </thead>
+            <tbody id="voucher-table" class="divide-y divide-brand-line"></tbody>
+          </table>
+        </div>
+      </section>
       <section id="voucher-grid-view" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-live="polite"></section>
     </main>
     <div id="toast-region" class="fixed right-4 top-20 z-50 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3" aria-live="polite"></div><script src="assets/app.js"></script>

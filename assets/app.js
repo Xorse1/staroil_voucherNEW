@@ -1547,11 +1547,31 @@ function statusBadge(status) {
   return `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${classes[status] || classes.Pending}">${escapeHtml(status)}</span>`;
 }
 
+function formatReadableDate(value, includeTime = true) {
+  const raw = String(value ?? "").trim();
+  if (!raw || raw === "N/A") return "N/A";
+
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+  if (!match) return raw;
+
+  const [, year, month, day, hour = "00", minute = "00", second = "00"] = match;
+  const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  if (Number.isNaN(date.getTime())) return raw;
+
+  return new Intl.DateTimeFormat("en-GH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    ...(includeTime && match[4] ? { hour: "2-digit", minute: "2-digit" } : {})
+  }).format(date);
+}
+
 function normalizePurchasedVoucher(row) {
   const expired = row.expiry_date && row.expiry_date <= new Date().toISOString().slice(0, 10);
   const redeemed = Number(row.redeemed_status) === 1;
   const active = Number(row.status) === 1;
   const status = redeemed ? "Redeemed" : expired ? "Expired" : active ? "Activated" : "Pending";
+  const rawOrderDate = row.order_date || "";
 
   return {
     id: row.id,
@@ -1559,7 +1579,8 @@ function normalizePurchasedVoucher(row) {
     voucherCode: row.voucher_code || "N/A",
     voucherAuth: row.voucher_auth || "N/A",
     amount: Number(row.amount || 0),
-    startDate: row.start_date || "N/A",
+    rawOrderDate,
+    orderDate: formatReadableDate(rawOrderDate),
     expiryDate: row.expiry_date || "N/A",
     stationName: row.station_name || "N/A",
     redeemedPhone: row.redeemed_phone || "N/A",
@@ -1615,7 +1636,7 @@ function filteredVouchers() {
       v.voucherCode,
       v.voucherAuth,
       v.amount,
-      v.startDate,
+      v.orderDate,
       v.expiryDate,
       v.stationName,
       v.redeemedPhone,
@@ -1656,7 +1677,7 @@ async function exportVouchers() {
     "Voucher Code",
     "Voucher Auth",
     "Amount",
-    "Start Date",
+    "Order Date",
     "Expiry Date",
     "Station",
     "Redeemed Status",
@@ -1669,7 +1690,7 @@ async function exportVouchers() {
     voucher.voucherCode,
     voucher.voucherAuth,
     voucher.amount,
-    voucher.startDate,
+    voucher.orderDate,
     voucher.expiryDate,
     voucher.stationName,
     voucher.redeemedStatus,
@@ -1722,7 +1743,7 @@ async function renderVouchers() {
       <td class="whitespace-nowrap px-4 py-4 text-sm"><span class="rounded-full bg-brand-blue px-2.5 py-1 text-xs font-semibold text-white">${escapeHtml(v.voucherCode)}</span></td>
       <td class="whitespace-nowrap px-4 py-4 text-sm">${escapeHtml(v.voucherAuth)}</td>
       <td class="whitespace-nowrap px-4 py-4 text-sm font-bold">${money(v.amount)}</td>
-      <td class="whitespace-nowrap px-4 py-4 text-sm text-brand-muted">${escapeHtml(v.startDate)}</td>
+      <td class="whitespace-nowrap px-4 py-4 text-sm text-brand-muted">${escapeHtml(v.orderDate)}</td>
       <td class="whitespace-nowrap px-4 py-4 text-sm text-brand-muted">${escapeHtml(v.expiryDate)}</td>
       <td class="whitespace-nowrap px-4 py-4 text-sm">${escapeHtml(v.stationName)}</td>
       <td class="whitespace-nowrap px-4 py-4">${statusBadge(v.redeemedStatus)}</td>
@@ -1751,8 +1772,8 @@ async function renderVouchers() {
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div class="rounded-ui bg-brand-soft p-3">
-              <dt class="text-xs font-semibold uppercase text-brand-muted">Start</dt>
-              <dd class="mt-1 font-semibold">${escapeHtml(v.startDate)}</dd>
+              <dt class="text-xs font-semibold uppercase text-brand-muted">Order Date</dt>
+              <dd class="mt-1 font-semibold">${escapeHtml(v.orderDate)}</dd>
             </div>
             <div class="rounded-ui bg-brand-soft p-3">
               <dt class="text-xs font-semibold uppercase text-brand-muted">Expiry</dt>
@@ -1978,7 +1999,8 @@ async function renderAnalyticsDashboard() {
 
     const monthly = new Map();
     purchased.forEach((voucher) => {
-      const key = /^\d{4}-\d{2}/.test(voucher.startDate) ? voucher.startDate.slice(0, 7) : "Unknown";
+      const sourceDate = voucher.rawOrderDate || voucher.orderDate;
+      const key = /^\d{4}-\d{2}/.test(sourceDate) ? sourceDate.slice(0, 7) : "Unknown";
       monthly.set(key, (monthly.get(key) || 0) + Number(voucher.amount || 0));
     });
     if (monthlyChart) {
