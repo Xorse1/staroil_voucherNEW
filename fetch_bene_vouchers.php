@@ -64,4 +64,37 @@ if (!is_array($response_data)) {
     exit;
 }
 
+if (($response_data['status'] ?? '') === 'success' && is_array($response_data['data'] ?? null)) {
+    $originalCount = count($response_data['data']);
+    $seen = [];
+    $deduped = [];
+
+    foreach ($response_data['data'] as $voucher) {
+        if (!is_array($voucher)) {
+            continue;
+        }
+
+        $keyParts = [
+            $voucher['id'] ?? '',
+            $voucher['voucher_code'] ?? '',
+            $voucher['voucher_auth'] ?? '',
+            $voucher['order_code'] ?? '',
+            $voucher['amount'] ?? '',
+        ];
+        $key = hash('sha256', implode('|', array_map('strval', $keyParts)));
+
+        if (isset($seen[$key])) {
+            continue;
+        }
+
+        $seen[$key] = true;
+        $deduped[] = $voucher;
+    }
+
+    $response_data['data'] = $deduped;
+    $response_data['original_count'] = $originalCount;
+    $response_data['deduped_count'] = count($deduped);
+    $response_data['duplicate_count'] = $originalCount - count($deduped);
+}
+
 echo json_encode($response_data);

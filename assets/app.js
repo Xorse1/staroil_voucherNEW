@@ -1590,6 +1590,26 @@ function normalizePurchasedVoucher(row) {
   };
 }
 
+function purchasedVoucherKey(voucher) {
+  return [
+    voucher.id || "",
+    voucher.voucherCode || "",
+    voucher.voucherAuth || "",
+    voucher.orderCode || "",
+    voucher.amount || ""
+  ].join("|");
+}
+
+function uniquePurchasedVouchers(items) {
+  const seen = new Set();
+  return items.filter((voucher) => {
+    const key = purchasedVoucherKey(voucher);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 async function loadPurchasedVouchers() {
   if (vouchersLoadedFromEndpoint) return;
   const table = document.getElementById("voucher-table");
@@ -1616,7 +1636,7 @@ async function loadPurchasedVouchers() {
       vouchers = [];
       toast("warning", "No purchased vouchers", payload.message || "No purchased vouchers were returned for this account.");
     } else {
-      vouchers = payload.data.map(normalizePurchasedVoucher);
+      vouchers = uniquePurchasedVouchers(payload.data.map(normalizePurchasedVoucher));
     }
   } catch (error) {
     vouchers = [];
@@ -1954,7 +1974,7 @@ async function renderAnalyticsDashboard() {
     const purchasedPayload = await fetchAnalyticsJson("fetch_bene_vouchers");
     const walletPayload = await fetchAnalyticsJson("wallet_balance").catch(() => ({ data: { balance: 0 } }));
 
-    const purchased = Array.isArray(purchasedPayload.data) ? purchasedPayload.data.map(normalizePurchasedVoucher) : [];
+    const purchased = Array.isArray(purchasedPayload.data) ? uniquePurchasedVouchers(purchasedPayload.data.map(normalizePurchasedVoucher)) : [];
     const purchasedTotalCount = analyticsPayloadTotal(purchasedPayload, purchased.length);
     const walletValue = Number(walletPayload.data?.balance || 0);
     const cartItems = cart();
