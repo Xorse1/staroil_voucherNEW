@@ -65,6 +65,20 @@ function loadingSpinner(message = "Loading...") {
 }
 
 let cartTrackTimer = null;
+const activityTracker = {
+  endpoint: "user_activity_track",
+  queue: [],
+  flushTimer: null,
+  heartbeatTimer: null,
+  startedAt: Date.now(),
+  lastActiveAt: Date.now(),
+  activeMs: 0,
+  maxScroll: 0,
+  lastScrollAt: 0,
+  lastMouse: { x: 0, y: 0 },
+  drag: null,
+  initialized: false
+};
 
 function ensureRuntimeStyles() {
   if (document.getElementById("staroil-runtime-styles")) return;
@@ -842,6 +856,220 @@ function postJson(endpoint, payload) {
     body,
     keepalive: true
   }).catch(() => {});
+}
+
+function getActivityVisitorId() {
+  let id = localStorage.getItem("staroil:visitorId");
+  if (!id) {
+    id = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `visitor-${Date.now()}-${Math.random().toString(16).slice(2)}`).replace(/[^a-zA-Z0-9_-]/g, "");
+    localStorage.setItem("staroil:visitorId", id);
+  }
+  return id;
+}
+
+function getActivitySessionId() {
+  let id = sessionStorage.getItem("staroil:activitySessionId");
+  if (!id) {
+    id = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(16).slice(2)}`).replace(/[^a-zA-Z0-9_-]/g, "");
+    sessionStorage.setItem("staroil:activitySessionId", id);
+  }
+  return id;
+}
+
+const activityPageId = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `page-${Date.now()}-${Math.random().toString(16).slice(2)}`).replace(/[^a-zA-Z0-9_-]/g, "");
+
+function activityRoute() {
+  return normalizeRoute(location.pathname.split("/").pop() || "index");
+}
+
+function activityPath() {
+  return `${location.pathname}${location.search ? "?filtered" : ""}`;
+}
+
+function safeActivityText(value, max = 80) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]")
+    .replace(/\b(?:\+?\d[\d\s-]{6,}\d)\b/g, "[number]")
+    .trim()
+    .slice(0, max);
+}
+
+function describeActivityTarget(target) {
+  const el = target?.closest?.("button,a,input,select,textarea,label,[role='button'],[data-nav],[data-payment],[data-add],[data-remove],[data-qty]") || target;
+  if (!el || el === document || el === window) {
+    return { target: "document", targetText: "", targetRole: "" };
+  }
+
+  const tag = (el.tagName || "element").toLowerCase();
+  const id = el.id ? `#${el.id}` : "";
+  const dataKey = el.dataset?.payment || el.dataset?.add || el.dataset?.remove || el.dataset?.qty || el.dataset?.nav || "";
+  const role = el.getAttribute?.("role") || el.type || el.getAttribute?.("aria-label") || "";
+  const text = tag === "input" || tag === "textarea"
+    ? (el.name || el.id || el.type || "field")
+    : (el.getAttribute?.("aria-label") || el.innerText || el.textContent || el.href || "");
+
+  return {
+    target: safeActivityText(`${tag}${id}${dataKey ? `[${dataKey}]` : ""}`, 120),
+    targetText: safeActivityText(text, 120),
+    targetRole: safeActivityText(role, 60)
+  };
+}
+
+function activityMetrics(extra = {}) {
+  return {
+    elapsed_ms: Date.now() - activityTracker.startedAt,
+    active_ms: Math.round(activityTracker.activeMs),
+    max_scroll_percent: activityTracker.maxScroll,
+    viewport_width: window.innerWidth,
+    viewport_height: window.innerHeight,
+    ...extra
+  };
+}
+
+function markActivity() {
+  const now = Date.now();
+  const gap = now - activityTracker.lastActiveAt;
+  if (gap > 0 && gap < 30000 && document.visibilityState === "visible") {
+    activityTracker.activeMs += gap;
+  }
+  activityTracker.lastActiveAt = now;
+}
+
+function queueActivity(type, detail = {}, immediate = false) {
+  if (!activityTracker.initialized && type !== "page_view") return;
+  markActivity();
+  activityTracker.queue.push({
+    type,
+    clientTime: new Date().toISOString(),
+    route: activityRoute(),
+    path: activityPath(),
+    ...detail
+  });
+
+  if (activityTracker.queue.length >= 20 || immediate) {
+    flushActivity();
+    return;
+  }
+
+  clearTimeout(activityTracker.flushTimer);
+  activityTracker.flushTimer = setTimeout(flushActivity, 7000);
+}
+
+function flushActivity() {
+  if (!activityTracker.queue.length) return;
+  const events = activityTracker.queue.splice(0, 60);
+  postJson(activityTracker.endpoint, {
+    visitorId: getActivityVisitorId(),
+    activitySessionId: getActivitySessionId(),
+    pageId: activityPageId,
+    events
+  });
+}
+
+function updateScrollActivity() {
+  const doc = document.documentElement;
+  const scrollTop = window.scrollY || doc.scrollTop || 0;
+  const scrollable = Math.max(1, doc.scrollHeight - window.innerHeight);
+  const percent = Math.min(100, Math.max(0, Math.round((scrollTop / scrollable) * 100)));
+  activityTracker.maxScroll = Math.max(activityTracker.maxScroll, percent);
+  const now = Date.now();
+  if (now - activityTracker.lastScrollAt > 2500) {
+    activityTracker.lastScrollAt = now;
+    queueActivity("scroll", { metrics: activityMetrics({ scroll_percent: percent }) });
+  }
+}
+
+function initializeUserActivityTracking() {
+  if (activityTracker.initialized) return;
+  activityTracker.initialized = true;
+
+  queueActivity("page_view", {
+    metrics: activityMetrics({
+      referrer_present: Boolean(document.referrer),
+      cart_items: count()
+    })
+  }, true);
+
+  activityTracker.heartbeatTimer = setInterval(() => {
+    queueActivity("page_heartbeat", {
+      metrics: activityMetrics({
+        cart_items: count()
+      })
+    }, true);
+  }, 30000);
+
+  document.addEventListener("click", (event) => {
+    const target = describeActivityTarget(event.target);
+    queueActivity("click", {
+      ...target,
+      metrics: activityMetrics({
+        x: event.clientX,
+        y: event.clientY
+      })
+    });
+  }, true);
+
+  document.addEventListener("submit", (event) => {
+    const target = describeActivityTarget(event.target);
+    queueActivity("form_submit", {
+      ...target,
+      metrics: activityMetrics({
+        method: event.target?.method || "GET"
+      })
+    }, true);
+  }, true);
+
+  window.addEventListener("scroll", updateScrollActivity, { passive: true });
+  window.addEventListener("mousemove", (event) => {
+    activityTracker.lastMouse = { x: event.clientX, y: event.clientY };
+    markActivity();
+  }, { passive: true });
+  window.addEventListener("keydown", markActivity, { passive: true });
+  window.addEventListener("touchstart", markActivity, { passive: true });
+
+  document.addEventListener("dragstart", (event) => {
+    activityTracker.drag = { startedAt: Date.now(), target: describeActivityTarget(event.target) };
+    queueActivity("drag_start", {
+      ...activityTracker.drag.target,
+      metrics: activityMetrics(activityTracker.lastMouse)
+    });
+  }, true);
+
+  document.addEventListener("dragend", () => {
+    const duration = activityTracker.drag ? Date.now() - activityTracker.drag.startedAt : 0;
+    queueActivity("drag_end", {
+      ...(activityTracker.drag?.target || {}),
+      metrics: activityMetrics({ duration_ms: duration, ...activityTracker.lastMouse })
+    }, true);
+    activityTracker.drag = null;
+  }, true);
+
+  document.addEventListener("visibilitychange", () => {
+    queueActivity("visibility_change", {
+      metrics: activityMetrics({ hidden: document.visibilityState === "hidden" })
+    }, document.visibilityState === "hidden");
+    if (document.visibilityState === "hidden") flushActivity();
+  });
+
+  window.addEventListener("pagehide", () => {
+    queueActivity("page_leave", {
+      metrics: activityMetrics({
+        total_time_ms: Date.now() - activityTracker.startedAt,
+        active_ms: Math.round(activityTracker.activeMs),
+        max_scroll_percent: activityTracker.maxScroll,
+        cart_items: count()
+      })
+    }, true);
+    flushActivity();
+  });
+
+  window.addEventListener("error", (event) => {
+    queueActivity("error", {
+      targetText: safeActivityText(event.message, 120),
+      metrics: activityMetrics({ line: event.lineno || 0 })
+    }, true);
+  });
 }
 
 function trackCartEvent(event = "cart_update", items = cart()) {
@@ -1864,6 +2092,7 @@ async function bindPage() {
   bindPasswordToggles();
   await loadAuthStatus();
   normalizeSavedCartImages();
+  initializeUserActivityTracking();
   updateShell();
   showMfaSetupModal();
   initializeAbandonedCartTracking();
