@@ -40,6 +40,31 @@ $amount = (float) ($voucher['amount'] ?? 0);
 $voucherCode = (string) ($voucher['voucher_code'] ?? '');
 $recipientName = (string) ($voucher['gift_recipient_name'] ?? '');
 $recipientPhoto = (string) ($voucher['gift_recipient_photo'] ?? '');
+
+function voucher_recipient_photo_url($photo) {
+    $photo = trim((string) $photo);
+    if ($photo === '') {
+        return '';
+    }
+
+    if (preg_match('/^(https?:)?\/\//i', $photo) || strpos($photo, 'data:') === 0) {
+        return $photo;
+    }
+
+    $normalized = ltrim(str_replace('\\', '/', $photo), '/');
+    if ($normalized !== '' && is_file(__DIR__ . '/' . $normalized)) {
+        return $normalized;
+    }
+
+    $fileName = basename($normalized);
+    if ($fileName !== '' && is_file(__DIR__ . '/images/' . $fileName)) {
+        return 'images/' . $fileName;
+    }
+
+    return $normalized;
+}
+
+$recipientPhotoUrl = voucher_recipient_photo_url($recipientPhoto);
 ?>
 <!doctype html>
 <html lang="en">
@@ -285,11 +310,11 @@ $recipientPhoto = (string) ($voucher['gift_recipient_photo'] ?? '');
              <?php echo $recipientName;?> ❤️
         </div>
         <?php }
-        if(empty($giftRecipientPhoto)){}else{
+        if(empty($recipientPhotoUrl)){}else{
         ?>
 
         <div class="voucher-photo">
-            <img src="<?= $giftRecipientPhoto;?>" alt="Recipient Photo" crossorigin="anonymous">
+            <img src="<?= htmlspecialchars($recipientPhotoUrl); ?>" alt="Recipient Photo" crossorigin="anonymous">
         </div>
         <?php }?>
 
@@ -380,4 +405,3 @@ function downloadVoucherPDF() {
 </body>
 
 </html>
-
