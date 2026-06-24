@@ -6,7 +6,8 @@ session_start();
 foreach ([
     __DIR__ . '/log.php',
     __DIR__ . '/config.php',
-    __DIR__ . '/includes/function_send_sms.php'
+    //__DIR__ . '/includes/function_send_sms.php',
+    __DIR__ . '/sms_new_arkesel.php' 
 ] as $optionalFile) {
     if (is_file($optionalFile)) {
         require_once $optionalFile;
@@ -24,8 +25,17 @@ if ($phone === '') {
 
 $_SESSION['otp'] = random_int(100000, 999999);
 $_SESSION['authphone'] = $phone;
+$messageText = 'Star Oil Voucher Auth-' . $_SESSION['otp'];
 
-$smsDetailsUrl = getenv('SMS_DETAILS_API_URL') ?: 'https://fms.kayxappstaroil.com/APIs/voucher_api/get_sms_details.php';
+if (function_exists('send_sms_arkesel')) {
+            send_sms_arkesel($_SESSION['authphone'], $messageText);
+    }
+
+    if (function_exists('send_sms_backup')) {
+            send_sms_backup($_SESSION['authphone'], $messageText);
+    }
+
+/*$smsDetailsUrl = getenv('SMS_DETAILS_API_URL') ?: 'https://fms.kayxappstaroil.com/APIs/voucher_api/get_sms_details.php';
 $smsResponse = @file_get_contents($smsDetailsUrl);
 $smsDetails = $smsResponse ? json_decode($smsResponse, true) : null;
 
@@ -43,8 +53,10 @@ if (($smsDetails['status'] ?? '') === 'success' && !empty($smsDetails['data'][0]
         $record['endpoint2'] ?? '',
         1
     );
-    $_SESSION['otp_resent'] = time();
-}
+    
+}*/
+
+$_SESSION['otp_resent'] = time();
 
 header('Location: auth');
 exit;
