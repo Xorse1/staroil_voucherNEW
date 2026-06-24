@@ -9,6 +9,27 @@ function h($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+function compact_number($value) {
+    $number = (float) $value;
+    $absolute = abs($number);
+
+    if ($absolute >= 1000000000) {
+        $scaled = $number / 1000000000;
+        $suffix = 'B';
+    } elseif ($absolute >= 1000000) {
+        $scaled = $number / 1000000;
+        $suffix = 'M';
+    } elseif ($absolute >= 1000) {
+        $scaled = $number / 1000;
+        $suffix = 'K';
+    } else {
+        return number_format($number, 0);
+    }
+
+    $text = number_format($scaled, abs($scaled) >= 100 ? 0 : 1);
+    return rtrim(rtrim($text, '0'), '.') . $suffix;
+}
+
 function parse_visit_line($line) {
     $pattern = '/^\[(?<time>[^\]]+)\]\s+IP:\s+(?<ip>.*?)\s+\|\s+Page:\s+(?<page>.*?)\s+\|\s+Browser:\s+(?<browser>.*?)\s+\|\s+User:\s+(?<user>.*)$/';
     if (!preg_match($pattern, trim((string) $line), $matches)) {
@@ -106,7 +127,7 @@ function bar_chart($title, array $data, $limit = 8) {
           <div>
             <div class="mb-1 flex items-center justify-between gap-3 text-xs font-semibold">
               <span class="truncate text-slate-700"><?= h($label) ?></span>
-              <span class="text-slate-950"><?= (int) $value ?></span>
+              <span class="text-slate-950" title="<?= h(number_format((float) $value, 0)) ?>"><?= h(compact_number($value)) ?></span>
             </div>
             <div class="h-3 overflow-hidden rounded-full bg-slate-100">
               <div class="h-full rounded-full bg-[#2178BD]" style="width: <?= $width ?>%"></div>
@@ -154,7 +175,7 @@ function daily_line_chart(array $dailyCounts) {
           </svg>
           <div class="mt-2 flex justify-between text-xs font-semibold text-slate-500">
             <span><?= h($labels[0] ?? '') ?></span>
-            <span>Peak: <?= (int) $max ?> visits</span>
+            <span>Peak: <?= h(compact_number($max)) ?> visits</span>
             <span><?= h($labels[count($labels) - 1] ?? '') ?></span>
           </div>
         <?php endif; ?>
@@ -521,10 +542,10 @@ $avgScroll = round(average_activity_metric($activityEvents, 'page_leave', 'max_s
     </form>
 
     <section class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Total Visits</p><p class="mt-2 text-3xl font-bold"><?= (int) $totalVisits ?></p></article>
-      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Unique IPs</p><p class="mt-2 text-3xl font-bold"><?= (int) $uniqueIps ?></p></article>
-      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Known Users</p><p class="mt-2 text-3xl font-bold"><?= (int) $uniqueUsers ?></p></article>
-      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Guest Visits</p><p class="mt-2 text-3xl font-bold"><?= (int) $guestVisits ?></p></article>
+      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Total Visits</p><p class="mt-2 text-3xl font-bold" title="<?= h(number_format($totalVisits)) ?>"><?= h(compact_number($totalVisits)) ?></p></article>
+      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Unique IPs</p><p class="mt-2 text-3xl font-bold" title="<?= h(number_format($uniqueIps)) ?>"><?= h(compact_number($uniqueIps)) ?></p></article>
+      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Known Users</p><p class="mt-2 text-3xl font-bold" title="<?= h(number_format($uniqueUsers)) ?>"><?= h(compact_number($uniqueUsers)) ?></p></article>
+      <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Guest Visits</p><p class="mt-2 text-3xl font-bold" title="<?= h(number_format($guestVisits)) ?>"><?= h(compact_number($guestVisits)) ?></p></article>
       <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Top Page</p><p class="mt-2 truncate text-xl font-bold" title="<?= h($topPage) ?>"><?= h($topPage) ?></p></article>
     </section>
 
@@ -544,9 +565,9 @@ $avgScroll = round(average_activity_metric($activityEvents, 'page_leave', 'max_s
       </div>
 
       <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Activity Events</p><p class="mt-2 text-3xl font-bold"><?= (int) $totalActivityEvents ?></p></article>
-        <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Tracked Sessions</p><p class="mt-2 text-3xl font-bold"><?= (int) $uniqueActivitySessions ?></p></article>
-        <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Tracked Visitors</p><p class="mt-2 text-3xl font-bold"><?= (int) $uniqueActivityVisitors ?></p></article>
+        <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Activity Events</p><p class="mt-2 text-3xl font-bold" title="<?= h(number_format($totalActivityEvents)) ?>"><?= h(compact_number($totalActivityEvents)) ?></p></article>
+        <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Tracked Sessions</p><p class="mt-2 text-3xl font-bold" title="<?= h(number_format($uniqueActivitySessions)) ?>"><?= h(compact_number($uniqueActivitySessions)) ?></p></article>
+        <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Tracked Visitors</p><p class="mt-2 text-3xl font-bold" title="<?= h(number_format($uniqueActivityVisitors)) ?>"><?= h(compact_number($uniqueActivityVisitors)) ?></p></article>
         <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Avg Page Time</p><p class="mt-2 text-3xl font-bold"><?= h($avgPageSeconds) ?>s</p><p class="mt-1 text-xs font-semibold text-brand-muted">Active: <?= h($avgActiveSeconds) ?>s</p></article>
         <article class="rounded-ui border border-brand-line bg-white p-4 shadow-sm"><p class="text-sm font-bold text-brand-muted">Avg Scroll Depth</p><p class="mt-2 text-3xl font-bold"><?= h($avgScroll) ?>%</p></article>
       </div>
@@ -582,7 +603,7 @@ $avgScroll = round(average_activity_metric($activityEvents, 'page_leave', 'max_s
               <?php $views = max(1, (int) $row['views']); ?>
               <tr>
                 <td class="px-4 py-3 font-semibold"><?= h($page) ?></td>
-                <td class="whitespace-nowrap px-4 py-3"><?= (int) $row['views'] ?></td>
+                <td class="whitespace-nowrap px-4 py-3" title="<?= h(number_format((float) $row['views'], 0)) ?>"><?= h(compact_number($row['views'])) ?></td>
                 <td class="whitespace-nowrap px-4 py-3"><?= h(round(($row['total_ms'] / $views) / 1000, 1)) ?>s</td>
                 <td class="whitespace-nowrap px-4 py-3"><?= h(round(($row['active_ms'] / $views) / 1000, 1)) ?>s</td>
                 <td class="whitespace-nowrap px-4 py-3"><?= h(round($row['scroll'] / $views, 1)) ?>%</td>
@@ -597,7 +618,7 @@ $avgScroll = round(average_activity_metric($activityEvents, 'page_leave', 'max_s
       <div class="flex flex-col gap-2 border-b border-brand-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 class="font-bold">Visit List</h2>
-          <p class="text-sm text-brand-muted">Showing <?= count($tableRows) ?> of <?= count($filteredRows) ?> visit records for the selected range.</p>
+          <p class="text-sm text-brand-muted">Showing <?= h(compact_number(count($tableRows))) ?> of <?= h(compact_number(count($filteredRows))) ?> visit records for the selected range.</p>
         </div>
       </div>
       <div class="overflow-x-auto">
@@ -635,7 +656,7 @@ $avgScroll = round(average_activity_metric($activityEvents, 'page_leave', 'max_s
       <div class="flex flex-col gap-2 border-b border-brand-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 class="font-bold">Detailed Activity List</h2>
-          <p class="text-sm text-brand-muted">Showing <?= count($activityTableRows) ?> of <?= count($activityEvents) ?> activity events for the selected range.</p>
+          <p class="text-sm text-brand-muted">Showing <?= h(compact_number(count($activityTableRows))) ?> of <?= h(compact_number(count($activityEvents))) ?> activity events for the selected range.</p>
         </div>
       </div>
       <div class="overflow-x-auto">
@@ -696,6 +717,30 @@ $avgScroll = round(average_activity_metric($activityEvents, 'page_leave', 'max_s
     lastUpdatedAt: new Date()
   };
 
+  function compactNumber(value) {
+    const number = Number(value) || 0;
+    const absolute = Math.abs(number);
+    let divisor = 1;
+    let suffix = "";
+
+    if (absolute >= 1000000000) {
+      divisor = 1000000000;
+      suffix = "B";
+    } else if (absolute >= 1000000) {
+      divisor = 1000000;
+      suffix = "M";
+    } else if (absolute >= 1000) {
+      divisor = 1000;
+      suffix = "K";
+    } else {
+      return String(Math.round(number));
+    }
+
+    const scaled = number / divisor;
+    const digits = Math.abs(scaled) >= 100 ? 0 : 1;
+    return scaled.toFixed(digits).replace(/\.0$/, "") + suffix;
+  }
+
   function visitsSharedDataTableOptions() {
     return {
       pageLength: 25,
@@ -705,8 +750,10 @@ $avgScroll = round(average_activity_metric($activityEvents, 'page_leave', 'max_s
       language: {
         search: "Search:",
         lengthMenu: "Show _MENU_ rows",
-        info: "Showing _START_ to _END_ of _TOTAL_ rows",
         emptyTable: "No records available"
+      },
+      infoCallback: function (settings, start, end, max, total) {
+        return "Showing " + compactNumber(start) + " to " + compactNumber(end) + " of " + compactNumber(total) + " rows";
       }
     };
   }
