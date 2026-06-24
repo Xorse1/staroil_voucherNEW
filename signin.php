@@ -2,6 +2,7 @@
 ob_start();
 require_once __DIR__ . '/includes/session_config.php';
 session_start();
+require_once __DIR__ . '/includes/frontend_log.php';
 
 $hex_value = $_SESSION['signin_token'] ?? bin2hex(random_bytes(8));
 $_SESSION['signin_token'] = $hex_value;

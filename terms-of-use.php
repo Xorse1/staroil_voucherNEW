@@ -2,6 +2,7 @@
 ob_start();
 require_once __DIR__ . '/includes/session_config.php';
 session_start();
+require_once __DIR__ . '/includes/frontend_log.php';
 
 $promodate = gmdate('Y-m-d');
 if ($promodate >= '2025-12-23' && $promodate <= '2025-12-31' && file_exists(__DIR__ . '/includes/discount_banner.php')) {

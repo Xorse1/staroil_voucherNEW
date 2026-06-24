@@ -2,6 +2,7 @@
 ob_start();
 require_once __DIR__ . '/includes/session_config.php';
 session_start();
+require_once __DIR__ . '/includes/frontend_log.php';
 
 $reason = isset($_GET['reason']) ? trim((string) $_GET['reason']) : '';
 unset($_SESSION['shopping_cart']);

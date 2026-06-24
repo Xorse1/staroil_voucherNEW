@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth_guard.php';
+require_once __DIR__ . '/includes/frontend_log.php';
 require_once __DIR__ . '/includes/helper.php';
 
 function is_mobile_device_for_voucher_print() {

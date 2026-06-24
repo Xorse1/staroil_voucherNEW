@@ -1,4 +1,5 @@
 <?php require_once __DIR__ . '/includes/auth_guard.php'; ?>
+<?php require_once __DIR__ . '/includes/frontend_log.php'; ?>
 <!doctype html>
 <html lang="en">
   <head>

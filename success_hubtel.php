@@ -2,6 +2,7 @@
 ob_start();
 require_once __DIR__ . '/includes/session_config.php';
 session_start();
+require_once __DIR__ . '/includes/frontend_log.php';
 
 if (empty($_SESSION['user_id']) || empty($_SESSION['phone_verify'])) {
     header('Location: store');

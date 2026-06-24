@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/session_config.php';
 session_start();
+require_once __DIR__ . '/includes/frontend_log.php';
 
 const MARKETING_SMS_PASSWORD = 'Ee10252667#';
 const MARKETING_SMS_SUBJECT = '*Star Oil Voucher*';

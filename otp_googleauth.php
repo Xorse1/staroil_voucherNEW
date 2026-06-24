@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth_guard.php';
+require_once __DIR__ . '/includes/frontend_log.php';
 define('SECURE_ACCESS', true);
 require_once __DIR__ . '/config/config.php';
 

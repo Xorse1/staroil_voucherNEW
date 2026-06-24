@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth_guard.php';
+require_once __DIR__ . '/includes/frontend_log.php';
 
 $orderCode = trim((string) ($_GET['auth'] ?? ''));
 $amount = trim((string) ($_GET['amount'] ?? ''));

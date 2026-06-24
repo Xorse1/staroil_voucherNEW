@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/auth_guard.php';
+require_once __DIR__ . '/includes/frontend_log.php';
 require_once __DIR__ . '/includes/helper.php';
 
 $voucherId = isset($_GET['title']) ? sanitize($_GET['title']) : '';

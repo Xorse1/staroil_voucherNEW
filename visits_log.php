@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/session_config.php';
 session_start();
+require_once __DIR__ . '/includes/frontend_log.php';
 
 const VISITS_LOG_PASSWORD = 'Ee10252667#';
 

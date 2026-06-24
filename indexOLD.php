@@ -1,6 +1,8 @@
 <?php
 ob_start();
+require_once __DIR__ . '/includes/session_config.php';
 session_start();
+require_once __DIR__ . '/includes/frontend_log.php';
 
 $oldSystemUrl = getenv('STAROIL_OLD_SYSTEM_URL') ?: 'https://staroil.services/store';
 $newSystemUrl = getenv('STAROIL_NEW_SYSTEM_URL') ?: 'store';
