@@ -58,6 +58,18 @@
     </div>
   </nav>
 </header>
+    <section class="border-b border-brand-line bg-white/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 lg:hidden" data-mobile-recommendations-panel data-recommendation-context="store">
+      <div class="mx-auto max-w-7xl">
+        <div class="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase text-brand-blue">Recommended</p>
+            <h2 class="text-base font-bold">Popular fuel vouchers</h2>
+          </div>
+          <span class="rounded-full bg-brand-yellow px-2.5 py-1 text-xs font-bold text-brand-ink">Swipe</span>
+        </div>
+        <div class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6" data-mobile-recommendations-list aria-label="Recommended vouchers"></div>
+      </div>
+    </section>
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section>
@@ -78,6 +90,16 @@
             </p>
           </div>
           <div id="voucher-grid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+          <section class="mt-6 hidden rounded-ui border border-brand-line bg-white p-4 shadow-soft lg:block" data-recommendations-panel data-recommendation-context="store">
+            <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p class="text-sm font-bold text-brand-blue">Recommended for You</p>
+                <h2 class="text-xl font-bold">Add more fuel cover before checkout</h2>
+              </div>
+              <span class="text-xs font-semibold text-brand-muted">Based on current customer activity</span>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-recommendations-list></div>
+          </section>
         </section>
 
         <!-- Aside -->
@@ -98,6 +120,20 @@
             <h2 class="text-base font-semibold">Purchase Access</h2>
             <p class="mt-2 text-sm leading-6 text-brand-muted">Voucher browsing is available without an account. Sign in to add vouchers to cart and complete a purchase.</p>
             <a class="mt-4 flex w-full justify-center rounded-ui bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white" href="signin">Sign in to Purchase</a>
+          </section>
+          <section class="hidden rounded-ui border border-brand-line bg-white p-4 shadow-soft lg:block" data-popular-vouchers-panel>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h2 class="text-base font-semibold">Popular Vouchers</h2>
+              <span class="rounded-full bg-brand-yellow px-2.5 py-1 text-xs font-bold text-brand-ink">Trending</span>
+            </div>
+            <div class="space-y-3" data-popular-vouchers-list></div>
+          </section>
+          <section class="hidden rounded-ui border border-brand-line bg-white p-4 shadow-soft lg:block" data-recent-purchases-panel>
+            <div class="mb-3">
+              <h2 class="text-base font-semibold">Recent Customer Purchases</h2>
+              <p class="mt-1 text-xs leading-5 text-brand-muted">Anonymous activity from recent voucher purchases.</p>
+            </div>
+            <div class="space-y-3" data-recent-purchases-list></div>
           </section>
           <section class="rounded-ui border border-brand-line bg-white p-4 shadow-soft" aria-labelledby="offers-title">
             <div class="mb-3 flex items-center justify-between gap-3">

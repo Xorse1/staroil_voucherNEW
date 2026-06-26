@@ -67,7 +67,6 @@ function ms_build_profiles() {
         $profiles[$phoneKey] ??= [
             'phone' => $phone,
             'name' => $record['name'] ?? 'Customer',
-            'email' => $record['email'] ?? '',
             'user_id' => $record['user_id'] ?? null,
             'last_seen' => 0,
             'last_record' => null,
@@ -115,23 +114,23 @@ function ms_build_profiles() {
 function ms_campaigns() {
     return [
         'abandoned_cart' => [
-            'name' => 'Abandoned cart SMS',
+            'name' => 'Abandoned cart reminders',
             'description' => 'Users with vouchers left in cart and no later success event for that cart.',
         ],
         'payment_dropoff' => [
-            'name' => 'Payment drop-off SMS',
+            'name' => 'Payment drop-off reminders',
             'description' => 'Users who clicked Pay Now or started checkout but did not complete payment.',
         ],
         'denomination_interest' => [
-            'name' => 'Denomination interest SMS',
+            'name' => 'Denomination interest reminders',
             'description' => 'Users repeatedly showing interest in a voucher amount.',
         ],
         'best_time' => [
-            'name' => 'Best-time sales SMS',
+            'name' => 'Best-time sales reminders',
             'description' => 'Recent identifiable users, for sending during your peak traffic window.',
         ],
         'returning_buyer' => [
-            'name' => 'Returning buyer SMS',
+            'name' => 'Returning buyer reminders',
             'description' => 'Users with a previous successful checkout who have not returned recently.',
         ],
     ];
@@ -228,7 +227,9 @@ function ms_send_log_count($segment, $phone, $signature) {
     foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         $row = json_decode($line, true);
         if (!is_array($row)) continue;
-        if (($row['segment'] ?? '') === $segment && ($row['phone_hash'] ?? '') === hash('sha256', $phone . '|staroil-marketing') && ($row['signature'] ?? '') === $signature) {
+        if (($row['status'] ?? '') !== 'sent') continue;
+        $rowChannel = $row['channel'] ?? 'sms';
+        if (($row['segment'] ?? '') === $segment && $rowChannel === 'sms' && ($row['phone_hash'] ?? '') === hash('sha256', $phone . '|staroil-marketing') && ($row['signature'] ?? '') === $signature) {
             $count++;
         }
     }
@@ -240,6 +241,7 @@ function ms_log_send($segment, array $recipient, $status) {
     $row = [
         'sent_at' => gmdate('c'),
         'segment' => $segment,
+        'channel' => 'sms',
         'phone_hash' => hash('sha256', $recipient['phone'] . '|staroil-marketing'),
         'user_id' => $recipient['user_id'],
         'signature' => $recipient['cart_signature'] ?: hash('sha256', $segment . '|' . $recipient['phone']),
@@ -276,28 +278,30 @@ if ($authorized && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_c
     $selectedSegment = isset($_POST['segment'], $campaigns[$_POST['segment']]) ? $_POST['segment'] : 'abandoned_cart';
     $limit = max(1, min(200, (int) ($_POST['limit'] ?? 50)));
     $recipients = array_slice(ms_segment_recipients($selectedSegment, $profiles), 0, $limit);
-    $sent = 0;
-    $skipped = 0;
+    $smsSent = 0;
+    $smsSkipped = 0;
+    $smsFailed = 0;
 
     foreach ($recipients as $recipient) {
         $signature = $recipient['cart_signature'] ?: hash('sha256', $selectedSegment . '|' . $recipient['phone']);
-        if (ms_send_log_count($selectedSegment, $recipient['phone'], $signature) >= 1) {
-            $skipped++;
-            continue;
-        }
 
-        $message = ms_message($selectedSegment, $recipient);
-        if (function_exists('send_sms_arkesel')) {
-            send_sms_arkesel($recipient['phone'], $message);
-            $sent++;
-            ms_log_send($selectedSegment, $recipient, 'sent');
+        if (ms_send_log_count($selectedSegment, $recipient['phone'], $signature) >= 1) {
+            $smsSkipped++;
+            ms_log_send($selectedSegment, $recipient, 'duplicate_skipped');
         } else {
-            ms_log_send($selectedSegment, $recipient, 'sms_function_missing');
-            $skipped++;
+            $message = ms_message($selectedSegment, $recipient);
+            if (function_exists('send_sms_arkesel')) {
+                send_sms_arkesel($recipient['phone'], $message);
+                $smsSent++;
+                ms_log_send($selectedSegment, $recipient, 'sent');
+            } else {
+                ms_log_send($selectedSegment, $recipient, 'sms_function_missing');
+                $smsFailed++;
+            }
         }
     }
 
-    $sendResult = "Sent {$sent} SMS. Skipped {$skipped}.";
+    $sendResult = "Sent {$smsSent} SMS. Skipped {$smsSkipped}. Failed {$smsFailed}.";
 }
 ?>
 <!doctype html>

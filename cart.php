@@ -42,6 +42,19 @@ require_once __DIR__ . '/includes/frontend_log.php';
       </nav>
     </header>
 
+    <section class="border-b border-brand-line bg-white/95 px-4 py-4 shadow-sm backdrop-blur sm:px-6 lg:hidden" data-mobile-recommendations-panel data-recommendation-context="cart">
+      <div class="mx-auto max-w-7xl">
+        <div class="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase text-brand-blue">Suggested Add-ons</p>
+            <h2 class="text-base font-bold">Before you pay</h2>
+          </div>
+          <span class="rounded-full bg-brand-yellow px-2.5 py-1 text-xs font-bold text-brand-ink">Swipe</span>
+        </div>
+        <div class="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6" data-mobile-recommendations-list aria-label="Suggested voucher add-ons"></div>
+      </div>
+    </section>
+
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -65,8 +78,19 @@ require_once __DIR__ . '/includes/frontend_log.php';
             <h2 class="font-semibold">Selected vouchers</h2>
           </div>
           <div id="cart-list" class="divide-y divide-brand-line"></div>
+          <div class="hidden border-t border-brand-line p-4 lg:block" data-recommendations-panel data-recommendation-context="cart">
+            <div class="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p class="text-sm font-bold text-brand-blue">Suggested Add-ons</p>
+                <h2 class="text-lg font-bold">Customers often add these before paying</h2>
+              </div>
+              <span class="text-xs font-semibold text-brand-muted">One tap adds to cart</span>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" data-recommendations-list></div>
+          </div>
         </section>
 
+        <div class="space-y-4">
         <form id="checkout-form" action="checkout_process" method="POST" data-tingg-action="checkout_process" data-hubtel-action="checkout_process_hubtel" data-wallet-action="wallet_checkout_process" class="h-fit rounded-ui border border-brand-line bg-white p-4 shadow-soft"> 
           <h2 class="font-semibold">Order Summary</h2>
           <dl class="mt-4 space-y-3 text-sm">
@@ -133,6 +157,14 @@ require_once __DIR__ . '/includes/frontend_log.php';
 
           <button id="place-order" name="checkout" class="mt-5 w-full rounded-ui bg-brand-yellow px-4 py-2.5 text-sm font-bold text-brand-ink hover:bg-[#E8BB1E] focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2" type="submit">Pay Now</button>
         </form>
+        <section class="hidden rounded-ui border border-brand-line bg-white p-4 shadow-soft lg:block" data-popular-vouchers-panel>
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <h2 class="text-base font-semibold">Popular Today</h2>
+            <span class="rounded-full bg-brand-yellow px-2.5 py-1 text-xs font-bold text-brand-ink">Best sellers</span>
+          </div>
+          <div class="space-y-3" data-popular-vouchers-list></div>
+        </section>
+        </div>
       </div>
     </main>
 

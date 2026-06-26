@@ -1301,6 +1301,193 @@ async function loadProducts() {
   }
 }
 
+function productForAmount(amount) {
+  const numericAmount = Number(amount);
+  return products.find((item) => Number(item.amount) === numericAmount)
+    || fallbackProducts.find((item) => Number(item.amount) === numericAmount)
+    || {
+      id: `fuel-${numericAmount}`,
+      amount: numericAmount,
+      status: "Available",
+      stock: 0,
+      image: imageForAmount(numericAmount)
+    };
+}
+
+async function loadRecommendations(context = "store") {
+  const cartAmounts = cart().map((item) => item.amount).filter(Boolean).join(",");
+  const url = new URL("voucher_recommendations", window.location.href);
+  url.searchParams.set("context", context);
+  if (cartAmounts) url.searchParams.set("cart", cartAmounts);
+
+  const response = await fetch(url.toString(), {
+    headers: { Accept: "application/json" },
+    cache: "no-store"
+  });
+  if (!response.ok) throw new Error(`Recommendation request failed with ${response.status}`);
+  const payload = await response.json();
+  if (payload.status !== "success") throw new Error(payload.message || "Recommendations unavailable");
+  return payload;
+}
+
+function recommendationButton(amount, compact = false) {
+  if (!authState.loggedIn) {
+    return `<a class="${compact ? "px-3 py-1.5 text-xs" : "px-4 py-2.5 text-sm"} inline-flex justify-center rounded-ui bg-brand-yellow font-bold text-brand-ink hover:bg-[#E8BB1E]" href="signin">Sign in</a>`;
+  }
+  return `<button class="${compact ? "px-3 py-1.5 text-xs" : "px-4 py-2.5 text-sm"} inline-flex justify-center rounded-ui bg-brand-blue font-semibold text-white hover:bg-[#1A659F]" data-recommendation-add="${Number(amount)}" type="button">Add</button>`;
+}
+
+function recommendationCard(item) {
+  return `
+    <article class="rounded-ui border border-brand-line bg-white p-3 shadow-sm">
+      <div class="overflow-hidden rounded-ui border border-brand-line bg-brand-soft">
+        <img class="aspect-[3.12/1] w-full object-cover" src="${escapeHtml(item.image || imageForAmount(item.amount))}" alt="Star Oil ${escapeHtml(item.label || money(Number(item.amount || 0)))} voucher" loading="lazy" />
+      </div>
+      <div class="mt-3 flex items-start justify-between gap-3">
+        <div>
+          <p class="text-base font-bold">${escapeHtml(item.label || money(Number(item.amount || 0)))}</p>
+          <p class="mt-1 text-xs leading-5 text-brand-muted">${escapeHtml(item.reason || "Recommended voucher")}</p>
+        </div>
+        <span class="rounded-full bg-brand-yellow px-2 py-1 text-[11px] font-bold text-brand-ink">${escapeHtml(item.tag || "Pick")}</span>
+      </div>
+      <div class="mt-3">${recommendationButton(item.amount)}</div>
+    </article>`;
+}
+
+function mobileRecommendationSlide(item) {
+  const amount = Number(item.amount || 0);
+  const label = item.label || money(amount);
+  const reason = item.reason || (Number(item.purchased_today || 0) > 0
+    ? `Purchased ${Number(item.purchased_today).toLocaleString("en-GH")} time${Number(item.purchased_today) === 1 ? "" : "s"} today`
+    : "Popular with voucher customers");
+  return `
+    <article class="min-w-[78%] snap-start rounded-ui border border-brand-line bg-white p-3 shadow-sm sm:min-w-[340px]">
+      <div class="flex gap-3">
+        <img class="h-16 w-28 shrink-0 rounded-ui border border-brand-line object-cover" src="${escapeHtml(item.image || imageForAmount(amount))}" alt="Star Oil ${escapeHtml(label)} voucher" loading="lazy" />
+        <div class="min-w-0 flex-1">
+          <div class="mb-1 flex items-start justify-between gap-2">
+            <p class="truncate text-base font-bold">${escapeHtml(label)}</p>
+            <span class="shrink-0 rounded-full bg-[#EEF7FF] px-2 py-0.5 text-[11px] font-bold text-brand-blue">${escapeHtml(item.tag || "Pick")}</span>
+          </div>
+          <p class="line-clamp-2 text-xs leading-5 text-brand-muted">${escapeHtml(reason)}</p>
+        </div>
+      </div>
+      <div class="mt-3">${recommendationButton(amount, true)}</div>
+    </article>`;
+}
+
+function popularVoucherRow(item) {
+  const purchased = Number(item.purchased_today || 0);
+  const interest = Number(item.interest || 0);
+  const purchaseText = `Purchased ${purchased.toLocaleString("en-GH")} time${purchased === 1 ? "" : "s"} today · ${interest.toLocaleString("en-GH")} interest signal${interest === 1 ? "" : "s"}`;
+  return `
+    <article class="flex gap-3 rounded-ui border border-brand-line bg-white p-2.5">
+      <img class="h-14 w-24 shrink-0 rounded-ui border border-brand-line object-cover" src="${escapeHtml(item.image || imageForAmount(item.amount))}" alt="${escapeHtml(item.label)} voucher" loading="lazy" />
+      <div class="min-w-0 flex-1">
+        <div class="flex items-start justify-between gap-2">
+          <p class="font-bold">${escapeHtml(item.label)}</p>
+          <span class="shrink-0 rounded-full bg-[#EEF7FF] px-2 py-0.5 text-[11px] font-bold text-brand-blue">${escapeHtml(item.tag || "Popular")}</span>
+        </div>
+        <p class="mt-1 text-xs leading-5 text-brand-muted">${purchaseText}</p>
+        <div class="mt-2">${recommendationButton(item.amount, true)}</div>
+      </div>
+    </article>`;
+}
+
+function recentPurchaseRow(item) {
+  return `
+    <article class="flex items-center gap-3 rounded-ui border border-brand-line bg-white p-2.5">
+      <img class="h-10 w-16 shrink-0 rounded-ui border border-brand-line object-cover" src="${escapeHtml(item.image || imageForAmount(item.amount))}" alt="Recent voucher purchase" loading="lazy" />
+      <div class="min-w-0">
+        <p class="truncate text-sm font-bold">${escapeHtml(item.message || "A customer bought a voucher")}</p>
+        <p class="mt-0.5 text-xs font-semibold text-brand-muted">${escapeHtml(item.time_ago || "recently")}</p>
+      </div>
+    </article>`;
+}
+
+function bindRecommendationAdds(root = document) {
+  root.querySelectorAll("[data-recommendation-add]").forEach((button) => {
+    if (button.dataset.recommendationBound === "true") return;
+    button.dataset.recommendationBound = "true";
+    button.addEventListener("click", () => addRecommendationToCart(Number(button.dataset.recommendationAdd)));
+  });
+}
+
+function addRecommendationToCart(amount) {
+  if (!authState.loggedIn) {
+    location.href = "signin";
+    return;
+  }
+
+  const product = productForAmount(amount);
+  const items = cart();
+  const existing = items.find((item) => Number(item.amount) === Number(amount));
+  if (existing) existing.quantity += 1;
+  else items.push({ ...product, id: product.id || `fuel-${amount}`, quantity: 1 });
+  saveCart(items, "recommendation_added");
+  renderCart();
+  updateShell();
+  fillTotals();
+  toast("success", "Recommended voucher added", `${money(Number(amount))} fuel voucher was added to your cart.`);
+}
+
+async function renderRecommendations() {
+  const panels = document.querySelectorAll("[data-mobile-recommendations-panel], [data-recommendations-panel], [data-popular-vouchers-panel], [data-recent-purchases-panel]");
+  if (!panels.length) return;
+
+  panels.forEach((panel) => {
+    const target = panel.querySelector("[data-mobile-recommendations-list], [data-recommendations-list], [data-popular-vouchers-list], [data-recent-purchases-list]");
+    if (target) target.innerHTML = loadingSpinner("Loading recommendations...");
+  });
+
+  try {
+    const context = document.querySelector("[data-mobile-recommendations-panel], [data-recommendations-panel]")?.dataset.recommendationContext || "store";
+    const payload = await loadRecommendations(context);
+    const recommendationItems = Array.isArray(payload.recommendations) ? payload.recommendations : [];
+    const popularItems = Array.isArray(payload.popular) ? payload.popular : [];
+
+    document.querySelectorAll("[data-mobile-recommendations-list]").forEach((list) => {
+      const items = recommendationItems.length ? recommendationItems : popularItems.slice(0, 4).map((item) => ({
+        ...item,
+        reason: Number(item.purchased_today || 0) > 0
+          ? `Purchased ${Number(item.purchased_today).toLocaleString("en-GH")} time${Number(item.purchased_today) === 1 ? "" : "s"} today`
+          : `${Number(item.interest || 0).toLocaleString("en-GH")} customer interest signal${Number(item.interest || 0) === 1 ? "" : "s"}`
+      }));
+      list.innerHTML = items.length
+        ? items.map(mobileRecommendationSlide).join("")
+        : `<div class="min-w-full rounded-ui border border-brand-line bg-white p-4 text-sm font-semibold text-brand-muted">Recommendations will appear after customers interact with vouchers.</div>`;
+    });
+
+    document.querySelectorAll("[data-recommendations-list]").forEach((list) => {
+      const items = recommendationItems;
+      list.innerHTML = items.length
+        ? items.map(recommendationCard).join("")
+        : `<div class="rounded-ui border border-brand-line bg-brand-soft p-4 text-sm font-semibold text-brand-muted">No recommendation data is available yet.</div>`;
+    });
+
+    document.querySelectorAll("[data-popular-vouchers-list]").forEach((list) => {
+      const items = popularItems.slice(0, 4);
+      list.innerHTML = items.length
+        ? items.map(popularVoucherRow).join("")
+        : `<p class="text-sm text-brand-muted">Popular voucher data will appear after customers interact with the store.</p>`;
+    });
+
+    document.querySelectorAll("[data-recent-purchases-list]").forEach((list) => {
+      const items = Array.isArray(payload.recent_purchases) ? payload.recent_purchases.slice(0, 5) : [];
+      list.innerHTML = items.length
+        ? items.map(recentPurchaseRow).join("")
+        : `<p class="text-sm text-brand-muted">Recent anonymous purchases will appear after completed payments are logged.</p>`;
+    });
+
+    bindRecommendationAdds(document);
+  } catch (error) {
+    panels.forEach((panel) => {
+      const target = panel.querySelector("[data-mobile-recommendations-list], [data-recommendations-list], [data-popular-vouchers-list], [data-recent-purchases-list]");
+      if (target) target.innerHTML = `<p class="text-sm font-semibold text-brand-muted">Recommendations could not be loaded right now.</p>`;
+    });
+  }
+}
+
 function addToCart(id) {
   if (!authState.loggedIn) {
     location.href = "signin";
@@ -1365,6 +1552,7 @@ async function renderStore() {
     </article>`).join("");
   grid.querySelectorAll("[data-add]").forEach((button) => button.addEventListener("click", () => addToCart(button.dataset.add)));
   fillTotals();
+  renderRecommendations();
 }
 
 function fillTotals() {
@@ -1396,6 +1584,7 @@ function renderCart() {
   fillTotals();
   if (!items.length) {
     list.innerHTML = `<div class="p-6 text-center"><p class="font-semibold">Your cart is empty</p><p class="mt-1 text-sm text-brand-muted">Choose vouchers from the store to begin.</p><a class="mt-4 inline-flex rounded-ui bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white" href="store">Go to Store</a></div>`;
+    renderRecommendations();
     return;
   }
   list.innerHTML = items.map((item) => `
@@ -1416,6 +1605,7 @@ function renderCart() {
     </article>`).join("");
   list.querySelectorAll("[data-qty]").forEach((button) => button.addEventListener("click", () => changeQty(button.dataset.qty, Number(button.dataset.delta))));
   list.querySelectorAll("[data-remove]").forEach((button) => button.addEventListener("click", () => removeItem(button.dataset.remove)));
+  renderRecommendations();
 }
 
 function renderCheckout() {
