@@ -66,7 +66,7 @@ $payload = json_encode([
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-    CURLOPT_URL => 'http://localhost/kayxappsstaroil-v15/APIs/voucher_api/integrate_voucher/sso-login.php',
+    CURLOPT_URL => 'https://fms.kayxappstaroil.com/APIs/voucher_api/integrate_voucher/sso-login.php',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => $payload,
