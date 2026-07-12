@@ -52,15 +52,21 @@ function signin_success_redirect() {
 }
 
 $plainToken = $_GET['token'] ?? '';
+$app_code = $_GET['app_code'] ?? '';
 
 if (empty($plainToken)) {
+    die("Invalid SSO request");
+}
+
+if (empty($app_code)) {
     die("Invalid SSO request");
 }
 
 $bearerToken = $sso_login_api_bearer_token;
 
 $payload = json_encode([
-    'token' => $plainToken
+    'token' => $plainToken,
+    'app_code' => $app_code
 ]);
 
 $curl = curl_init();
@@ -105,6 +111,8 @@ if ($responseData['message'] === 'SSO token verified') {
     $_SESSION['phone_verify'] = (int) ($user['phone_verify'] ?? 0);
     $_SESSION['otp_status'] = (int) ($user['otp_status'] ?? 0);
     $_SESSION['auth_status'] = (int) ($user['auth_status'] ?? 0);
+    $_SESSION['app_code'] = $user['app_code'] ?? '';
+    $_SESSION['partner_fee'] = (float) ($user['partner_fee'] ?? 0.0);
 
     if ((int) $_SESSION['phone_verify'] === 0) {
         $_SESSION['mfa_pending'] = 'phone-verification';
