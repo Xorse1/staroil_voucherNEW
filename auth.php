@@ -14,13 +14,17 @@ foreach ([
 }
 
 function check_verify() {
-    if (empty($_SESSION['phone']) || empty($_SESSION['email'])) {
+    /*if (empty($_SESSION['phone']) || empty($_SESSION['email'])) {
+        return false;
+    }*/
+
+      if (empty($_SESSION['phone'])) {
         return false;
     }
 
     $phone = urlencode($_SESSION['phone']);
-    $email = urlencode($_SESSION['email']);
-    $url = "https://fms.kayxappstaroil.com/APIs/voucher_api/update_bene_phone.php?phone={$phone}&email={$email}";
+    //$email = urlencode($_SESSION['email']);
+    $url = "https://fms.kayxappstaroil.com/APIs/voucher_api/update_bene_phone.php?phone={$phone}";
 
     $ch = curl_init();
     if ($ch === false) {
