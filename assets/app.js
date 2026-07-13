@@ -1574,7 +1574,8 @@ function fillTotals() {
     discountRate: `(${discountPercent.toLocaleString("en-GH", { maximumFractionDigits: 2 })}%)`
   };
   Object.entries(values).forEach(([key, value]) => {
-    document.querySelectorAll(`[data-${key}]`).forEach((el) => el.textContent = value);
+    const dataKey = key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    document.querySelectorAll(`[data-${dataKey}]`).forEach((el) => el.textContent = value);
   });
   document.querySelectorAll("[data-discount-note]").forEach((el) => {
     if (currentSubtotal < discountConfig.minAmount) {
