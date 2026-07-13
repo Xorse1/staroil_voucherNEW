@@ -37,7 +37,7 @@ if (empty($items)) {
     checkout_fail('No valid voucher items were found.', 'cart');
 }
 
-$order = checkout_create_order($beneficiary_id, $items, 'Tingg', $add_voucher_api_key);
+$order = checkout_create_order($beneficiary_id, $items, 'Tingg', $add_voucher_api_key, checkout_partner_app_code(), $partnerFeePercent, $partnerFeeAmount, $customerPayableTotal);
 $generated_order_code = $order['order_code'];
 $total_amount = $order['total_amount'] ?? $overallTotal;
 

@@ -97,32 +97,31 @@ function checkout_customer_payable_total($voucherTotal) {
     return round((float) $voucherTotal + checkout_partner_fee_amount($voucherTotal), 2);
 }
 
-function checkout_create_order($beneficiaryId, $items, $gateway, $apiKey, $appCode, $partnerFeePercent, $partnerFeeAmount, $customerPayableTotal) {
+function checkout_create_order($beneficiaryId, $items, $gateway, $apiKey, $appCode = null, $partnerFeePercent = null, $partnerFeeAmount = null, $customerPayableTotal = null) {
     if ($apiKey === '') {
         checkout_fail('Voucher order API key is not configured.');
     }
 
     $api_url = 'https://fms.kayxappstaroil.com/APIs/voucher_api/add_voucher_order_api.php';
+    $discountedAmount = (float) ($items[0]['discounted_amount'] ?? 0);
+    $appCode = $appCode ?? checkout_partner_app_code();
+    $partnerFeePercent = $partnerFeePercent ?? checkout_partner_fee_percent();
+    $partnerFeeAmount = $partnerFeeAmount ?? checkout_partner_fee_amount($discountedAmount);
+    $customerPayableTotal = $customerPayableTotal ?? checkout_customer_payable_total($discountedAmount);
+
     $data = [
         'beneficiary_id' => $beneficiaryId,
         'items' => json_encode($items),
         'order_date' => gmdate('Y-m-d H:i:s'),
         'check_date' => gmdate('Y-m-d'),
-        'payment_gateway' => $gateway,
-        'app_code' => $appCode,
-        'partner_fee' => $partnerFeePercent,
-        'partner_fee_amount' => $partnerFeeAmount,
-        'customer_payable_total' => $customerPayableTotal
+        'payment_gateway' => $gateway
     ];
 
-    $discountedAmount = (float) ($items[0]['discounted_amount'] ?? 0);
-    $partnerFeePercent = checkout_partner_fee_percent();
-    $partnerFeeAmount = checkout_partner_fee_amount($discountedAmount);
     if ($partnerFeePercent > 0) {
-        $data['app_code'] = checkout_partner_app_code();
+        $data['app_code'] = $appCode;
         $data['partner_fee'] = $partnerFeePercent;
         $data['partner_fee_amount'] = $partnerFeeAmount;
-        $data['customer_payable_total'] = checkout_customer_payable_total($discountedAmount);
+        $data['customer_payable_total'] = $customerPayableTotal;
     }
 
     $ch = curl_init($api_url);

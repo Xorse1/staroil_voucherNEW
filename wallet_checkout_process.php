@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/auth_guard.php';
 require_once __DIR__ . '/includes/helper.php';
 require_once __DIR__ . '/includes/function_discount_calc.php';
 require_once __DIR__ . '/includes/checkout_payload.php';
-require_once __DIR__ . '/includes/wallet_api_client.php'; 
+require_once __DIR__ . '/includes/wallet_api_client.php';
 
 if (!isset($_POST['checkout'])) {
     header('Location: cart');
@@ -44,7 +44,7 @@ try {
         );
     }
 
-    $order = checkout_create_order($beneficiaryId, $items, 'Wallet', $add_voucher_api_key);
+    $order = checkout_create_order($beneficiaryId, $items, 'Wallet', $add_voucher_api_key, checkout_partner_app_code(), $partnerFeePercent, $partnerFeeAmount, $customerPayableTotal);
     $orderCode = $order['order_code'];
     $totalAmount = (float) ($order['total_amount'] ?? $discountedTotal);
 
