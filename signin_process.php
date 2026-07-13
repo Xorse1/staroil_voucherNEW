@@ -116,6 +116,8 @@ if ($responseData['message'] === 'Login successful!') {
     $_SESSION['phone_verify'] = (int) ($user['phone_verify'] ?? 0);
     $_SESSION['otp_status'] = (int) ($user['otp_status'] ?? 0);
     $_SESSION['auth_status'] = (int) ($user['auth_status'] ?? 0);
+    $_SESSION['app_code'] = '';
+    $_SESSION['partner_fee'] = 0.0;
 
     if ((int) $_SESSION['phone_verify'] === 0) {
         $_SESSION['mfa_pending'] = 'phone-verification';

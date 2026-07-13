@@ -26,13 +26,16 @@ if (empty($cartItems)) {
 $overallTotal = checkout_cart_subtotal($cartItems);
 $discount = calculateDiscount($overallTotal);
 $discountedTotal = (float) $discount['discounted_amount'];
+$partnerFeePercent = checkout_partner_fee_percent();
+$partnerFeeAmount = checkout_partner_fee_amount($discountedTotal);
+$customerPayableTotal = checkout_customer_payable_total($discountedTotal);
 $items = checkout_build_items($cartItems, $discountedTotal);
 
 if (empty($items)) {
     checkout_fail('No valid voucher items were found.', 'cart');
 }
 
-$order = checkout_create_order($beneficiary_id, $items, 'Hubtel', $add_voucher_api_key);
+$order = checkout_create_order($beneficiary_id, $items, 'Hubtel', $add_voucher_api_key, checkout_partner_app_code(), $partnerFeePercent, $partnerFeeAmount, $customerPayableTotal);
 $generated_order_code = $order['order_code'];
 $total_amount = $order['total_amount'] ?? $overallTotal;
 
@@ -42,10 +45,10 @@ if ($hubtelAPIusername === '' || $hubtelAPIpassword === '') {
 
 $hex_value = bin2hex(random_bytes(64));
 $data = [
-    'totalAmount' => $discountedTotal,
+    'totalAmount' => $customerPayableTotal,
     'description' => 'Staroil Voucher Online Checkout',
     'callbackUrl' => checkout_public_url('webhook_hubtel?' . $hex_value . '&auth=' . urlencode($generated_order_code)),
-    'returnUrl' => checkout_public_url('success_hubtel?' . $hex_value . '&auth=' . urlencode($generated_order_code) . '&amount=' . urlencode((string) $total_amount)),
+    'returnUrl' => checkout_public_url('success_hubtel?' . $hex_value . '&auth=' . urlencode($generated_order_code) . '&amount=' . urlencode((string) $customerPayableTotal) . '&voucher_amount=' . urlencode((string) $total_amount) . '&partner_fee=' . urlencode((string) $partnerFeeAmount) . '&partner_fee_percent=' . urlencode((string) $partnerFeePercent)),
     'merchantAccountNumber' => '2023580',
     'cancellationUrl' => checkout_public_url('failed'),
     'clientReference' => $generated_order_code

@@ -28,6 +28,9 @@ if (empty($cartItems)) {
 $overallTotal = checkout_cart_subtotal($cartItems);
 $discount = calculateDiscount($overallTotal);
 $discountedTotal = (float) $discount['discounted_amount'];
+$partnerFeePercent = checkout_partner_fee_percent();
+$partnerFeeAmount = checkout_partner_fee_amount($discountedTotal);
+$customerPayableTotal = checkout_customer_payable_total($discountedTotal);
 $items = checkout_build_items($cartItems, $discountedTotal);
 
 if (empty($items)) {
@@ -49,7 +52,7 @@ $data_pay = [
     'customer_email' => $email,
     'msisdn' => $phonewithoutZero,
     'account_number' => $generated_order_code,
-    'request_amount' => $discountedTotal,
+    'request_amount' => $customerPayableTotal,
     'merchant_transaction_id' => $generated_order_code,
     'service_code' => 'STAROILVOUCHERCHECKO',
     'country_code' => 'GHA',
@@ -57,7 +60,7 @@ $data_pay = [
     'raise_invoice' => true,
     'callback_url' => checkout_public_url('webhook?' . $hex_value . '&auth=' . urlencode($generated_order_code)),
     'fail_redirect_url' => checkout_public_url('failed'),
-    'success_redirect_url' => checkout_public_url('success?' . $hex_value . '&auth=' . urlencode($generated_order_code) . '&amount=' . urlencode((string) $total_amount))
+    'success_redirect_url' => checkout_public_url('success?' . $hex_value . '&auth=' . urlencode($generated_order_code) . '&amount=' . urlencode((string) $customerPayableTotal) . '&voucher_amount=' . urlencode((string) $total_amount) . '&partner_fee=' . urlencode((string) $partnerFeeAmount) . '&partner_fee_percent=' . urlencode((string) $partnerFeePercent))
 ];
 
 $ch = curl_init('https://checkout.tingg.africa/request-service/checkout-request/express-request');

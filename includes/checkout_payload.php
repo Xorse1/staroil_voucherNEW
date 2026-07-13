@@ -76,7 +76,28 @@ function checkout_cart_subtotal($cartItems) {
     return round($total, 2);
 }
 
-function checkout_create_order($beneficiaryId, $items, $gateway, $apiKey) {
+function checkout_partner_fee_percent() {
+    $percent = (float) ($_SESSION['partner_fee'] ?? 0);
+    if (!is_finite($percent) || $percent < 0) {
+        return 0.0;
+    }
+
+    return round($percent, 4);
+}
+
+function checkout_partner_app_code() {
+    return trim((string) ($_SESSION['app_code'] ?? ''));
+}
+
+function checkout_partner_fee_amount($voucherTotal) {
+    return round(((float) $voucherTotal * checkout_partner_fee_percent()) / 100, 2);
+}
+
+function checkout_customer_payable_total($voucherTotal) {
+    return round((float) $voucherTotal + checkout_partner_fee_amount($voucherTotal), 2);
+}
+
+function checkout_create_order($beneficiaryId, $items, $gateway, $apiKey, $appCode, $partnerFeePercent, $partnerFeeAmount, $customerPayableTotal) {
     if ($apiKey === '') {
         checkout_fail('Voucher order API key is not configured.');
     }
@@ -87,8 +108,22 @@ function checkout_create_order($beneficiaryId, $items, $gateway, $apiKey) {
         'items' => json_encode($items),
         'order_date' => gmdate('Y-m-d H:i:s'),
         'check_date' => gmdate('Y-m-d'),
-        'payment_gateway' => $gateway
+        'payment_gateway' => $gateway,
+        'app_code' => $appCode,
+        'partner_fee' => $partnerFeePercent,
+        'partner_fee_amount' => $partnerFeeAmount,
+        'customer_payable_total' => $customerPayableTotal
     ];
+
+    $discountedAmount = (float) ($items[0]['discounted_amount'] ?? 0);
+    $partnerFeePercent = checkout_partner_fee_percent();
+    $partnerFeeAmount = checkout_partner_fee_amount($discountedAmount);
+    if ($partnerFeePercent > 0) {
+        $data['app_code'] = checkout_partner_app_code();
+        $data['partner_fee'] = $partnerFeePercent;
+        $data['partner_fee_amount'] = $partnerFeeAmount;
+        $data['customer_payable_total'] = checkout_customer_payable_total($discountedAmount);
+    }
 
     $ch = curl_init($api_url);
     if ($ch === false) {

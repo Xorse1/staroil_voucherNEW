@@ -106,6 +106,10 @@ require_once __DIR__ . '/includes/frontend_log.php';
               <dt class="text-brand-muted">Total Discount <span data-discount-rate class="text-xs">(0%)</span></dt>
               <dd data-discount class="font-bold text-emerald-700">GHS 0.00</dd>
             </div>
+            <div class="hidden justify-between" data-partner-fee-row>
+              <dt class="text-brand-muted">Service fee <span data-partner-fee-rate class="text-xs">(0%)</span></dt>
+              <dd data-partner-fee class="font-bold">GHS 0.00</dd>
+            </div>
             <!-- <div class="rounded-ui border border-brand-line bg-brand-soft px-3 py-2 text-xs leading-5 text-brand-muted" data-discount-note>Discount is calculated automatically from the configured voucher discount rule.
             </div>-->
             <div class="flex justify-between border-t border-brand-line pt-3">
