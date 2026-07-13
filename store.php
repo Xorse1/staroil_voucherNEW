@@ -110,6 +110,7 @@
               <div class="flex justify-between"><dt class="text-brand-muted">Cart items</dt><dd data-items class="font-bold">0</dd></div>
               <div class="flex justify-between"><dt class="text-brand-muted">Subtotal</dt><dd data-subtotal class="font-bold">GHS 0.00</dd></div>
               <div class="flex justify-between"><dt class="text-brand-muted">Discount</dt><dd data-discount class="font-bold text-emerald-700">GHS 0.00</dd></div>
+              <div class="hidden justify-between" data-partner-fee-row><dt class="text-brand-muted">Service fee <span data-partner-fee-rate class="text-xs">(0%)</span></dt><dd data-partner-fee class="font-bold">GHS 0.00</dd></div>
             </dl>
             <div class="mt-4 border-t border-brand-line pt-4">
               <div class="flex justify-between"><span class="text-sm font-semibold">Estimated total</span><span data-total class="text-xl font-bold">GHS 0.00</span></div>

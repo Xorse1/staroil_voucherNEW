@@ -17,6 +17,8 @@ $showMfaSetupReminder = $loggedIn
     && !empty($_SESSION['mfa_setup_reminder'])
     && $otpStatus !== 1
     && $authenticatorStatus !== 1;
+$partnerFee = $loggedIn ? max(0, round((float) ($_SESSION['partner_fee'] ?? 0), 2)) : 0;
+$appCode = $loggedIn ? trim((string) ($_SESSION['app_code'] ?? '')) : '';
 
 echo json_encode([
     'status' => 'success',
@@ -24,7 +26,9 @@ echo json_encode([
     'name' => $loggedIn ? ($_SESSION['name'] ?? '') : '',
     'otpStatus' => $loggedIn ? $otpStatus : 0,
     'authenticatorStatus' => $loggedIn ? $authenticatorStatus : 0,
-    'showMfaSetupReminder' => $showMfaSetupReminder
+    'showMfaSetupReminder' => $showMfaSetupReminder,
+    'appCode' => $appCode,
+    'partnerFee' => $partnerFee
 ]);
 
 if ($showMfaSetupReminder) {

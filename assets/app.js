@@ -11,7 +11,7 @@ const fallbackProducts = [
 ];
 
 let products = [...fallbackProducts];
-let authState = { loggedIn: false, name: "", otpStatus: 0, authenticatorStatus: 0, showMfaSetupReminder: false };
+let authState = { loggedIn: false, name: "", otpStatus: 0, authenticatorStatus: 0, showMfaSetupReminder: false, appCode: "", partnerFee: 0 };
 
 let vouchers = JSON.parse(localStorage.getItem("staroil:vouchers") || "null") || [
   { code: "SO-FV-104280", amount: 200, date: "2026-06-02", status: "Pending" },
@@ -46,7 +46,10 @@ const discount = () => {
   if (amount < discountConfig.minAmount) return 0;
   return Math.round(Math.min(amount, discountConfig.maxCap) * discountConfig.rate * 100) / 100;
 };
-const total = () => subtotal() - discount();
+const voucherTotal = () => subtotal() - discount();
+const partnerFeePercent = () => Math.max(0, Number(authState.partnerFee || 0));
+const partnerFeeAmount = () => Math.round((voucherTotal() * partnerFeePercent()) / 100 * 100) / 100;
+const total = () => Math.round((voucherTotal() + partnerFeeAmount()) * 100) / 100;
 const count = () => cart().reduce((sum, item) => sum + item.quantity, 0);
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
   "&": "&amp;",
@@ -1216,12 +1219,16 @@ async function loadAuthStatus() {
     authState.otpStatus = Number(payload.otpStatus || 0);
     authState.authenticatorStatus = Number(payload.authenticatorStatus || 0);
     authState.showMfaSetupReminder = Boolean(payload.showMfaSetupReminder);
+    authState.appCode = payload.appCode || "";
+    authState.partnerFee = Math.max(0, Number(payload.partnerFee || 0));
   } catch (error) {
     authState.loggedIn = false;
     authState.name = "";
     authState.otpStatus = 0;
     authState.authenticatorStatus = 0;
     authState.showMfaSetupReminder = false;
+    authState.appCode = "";
+    authState.partnerFee = 0;
   } finally {
     clearTimeout(timeout);
   }
@@ -1561,6 +1568,7 @@ function fillTotals() {
   const values = {
     subtotal: money(currentSubtotal),
     discount: `-${money(discount())}`,
+    partnerFee: money(partnerFeeAmount()),
     total: money(total()),
     items: count(),
     discountRate: `(${discountPercent.toLocaleString("en-GH", { maximumFractionDigits: 2 })}%)`
@@ -1574,6 +1582,14 @@ function fillTotals() {
     } else {
       el.textContent = `Discount base is capped at ${money(discountConfig.maxCap)}. Current configured rate is ${discountPercent.toLocaleString("en-GH", { maximumFractionDigits: 2 })}%.`;
     }
+  });
+  document.querySelectorAll("[data-partner-fee-row]").forEach((row) => {
+    const hasPartnerFee = partnerFeePercent() > 0;
+    row.classList.toggle("hidden", !hasPartnerFee);
+    row.classList.toggle("flex", hasPartnerFee);
+  });
+  document.querySelectorAll("[data-partner-fee-rate]").forEach((el) => {
+    el.textContent = `(${partnerFeePercent().toLocaleString("en-GH", { maximumFractionDigits: 2 })}%)`;
   });
 }
 

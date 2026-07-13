@@ -20,6 +20,9 @@ if (empty($cartItems)) {
 $overallTotal = checkout_cart_subtotal($cartItems);
 $discount = calculateDiscount($overallTotal);
 $discountedTotal = (float) $discount['discounted_amount'];
+$partnerFeePercent = checkout_partner_fee_percent();
+$partnerFeeAmount = checkout_partner_fee_amount($discountedTotal);
+$customerPayableTotal = checkout_customer_payable_total($discountedTotal);
 $items = checkout_build_items($cartItems, $discountedTotal);
 
 if (empty($items)) {
@@ -31,11 +34,11 @@ try {
     $wallet = wallet_fetch_balance((int) $beneficiaryId);
     $walletBalance = (float) ($wallet['data']['balance'] ?? 0);
 
-    if ($walletBalance < $discountedTotal) {
-        $shortfall = max(0, $discountedTotal - $walletBalance);
+    if ($walletBalance < $customerPayableTotal) {
+        $shortfall = max(0, $customerPayableTotal - $walletBalance);
         checkout_fail(
             'Insufficient wallet balance. Wallet balance is GHS ' . number_format($walletBalance, 2) .
-            ', voucher total is GHS ' . number_format($discountedTotal, 2) .
+            ', checkout total is GHS ' . number_format($customerPayableTotal, 2) .
             '. Please top up GHS ' . number_format($shortfall, 2) . ' or choose Hubtel/Tingg.',
             'cart'
         );
@@ -45,7 +48,7 @@ try {
     $orderCode = $order['order_code'];
     $totalAmount = (float) ($order['total_amount'] ?? $discountedTotal);
 
-    wallet_pay_order((int) $beneficiaryId, $orderCode, $discountedTotal);
+    wallet_pay_order((int) $beneficiaryId, $orderCode, $customerPayableTotal);
 
     $updateUrl = 'https://fms.kayxappstaroil.com/APIs/voucher_api/update_voucher_order.php?reference=' . urlencode($orderCode);
     $ch = curl_init($updateUrl);
@@ -57,7 +60,7 @@ try {
     curl_close($ch);
 
     unset($_SESSION['shopping_cart']);
-    header('Location: success_wallet?auth=' . urlencode($orderCode) . '&amount=' . urlencode((string) $totalAmount));
+    header('Location: success_wallet?auth=' . urlencode($orderCode) . '&amount=' . urlencode((string) $customerPayableTotal) . '&voucher_amount=' . urlencode((string) $totalAmount) . '&partner_fee=' . urlencode((string) $partnerFeeAmount) . '&partner_fee_percent=' . urlencode((string) $partnerFeePercent));
     exit;
 } catch (Throwable $exception) {
     checkout_fail($exception->getMessage(), 'cart');
